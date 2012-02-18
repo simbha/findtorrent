@@ -1,0 +1,129 @@
+#!/usr/bin/env python2
+
+import re
+import os
+import sys
+import urllib
+import urllib2
+import gzip
+import string
+from configobj import ConfigObj
+from StringIO import StringIO
+
+def usage():
+    print "Usage: findtorrent [keywords]"
+
+def load_config():
+    config_file = os.environ["XDG_CONFIG_HOME"] + "/findtorrent/findtorrent.conf" 
+    try:
+        conf = ConfigObj(config_file, file_error = True)
+    except IOError:
+        if not os.path.exists(config_file.replace("/findtorrent.conf", "")):
+            os.makedirs(config_file.replace("/findtorrent.conf", ""))
+        conf = ConfigObj()
+        conf.filename = config_file
+        conf["download_dir"] = os.environ["HOME"]
+        conf.write()
+    return conf
+     
+def kat_get_items():
+    query = urllib.quote(sys.argv[1])
+    page = urllib.urlopen("http://kat.ph/usearch/%s" % query)
+    lines = page.readlines()
+    page.close()
+    index = 0
+    torrents = {}
+    for linenum, line in enumerate(lines):
+        if 'id="torrent_' in line:
+            index += 1
+            item = {}
+            item["index"] = index
+            end = linenum + 12
+            while (linenum < end):
+                line = lines[linenum].strip()
+                if "?name=" in line:
+                    item["name"] = urllib.unquote_plus(line.split("?name=")[-1].split("'+'")[-2])
+                elif "Download torrent file" in line:
+                    item["url"] = line.split('Download torrent file" href="')[-1].split('" onclick="')[-2].replace(".torrent?title=", "/") + ".torrent"
+                elif "nobr center" in line:
+                    item["size"] = line.split('"nobr center">')[-1].split("</span>")[-2].replace("<span>", "")
+                elif re.compile('<td class="center">[0-9]*</td>').search(line):
+                    item["files"] = line.split('<td class="center">')[-1].split("</td>")[-2]
+                elif "&nbsp;" in line:
+                    item["age"] = line.split('<td class="center">')[-1].split("</td>")[-2].replace("&nbsp;", " ")
+                elif "green center" in line:
+                    item["seed"] = line.split('<td class="green center">')[-1].split("</td>")[-2]
+                elif "red lasttd center" in line:
+                    item["leech"] = line.split('<td class="red lasttd center">')[-1].split("</td>")[-2]
+                linenum += 1
+            torrents[index] = item
+    return torrents, index
+
+class colors:
+    INDEX = '\033[90m'
+    NAME = '\033[94m'
+    SIZE = '\033[92m'
+    FILES = '\033[93m'
+    AGE = '\033[91m'
+    SEED = '\033[91m'
+    LEECH = '\033[95m'
+    HEADER = '\033[90m'
+    ENDC = '\033[0m'
+    def disable(self):
+        self.INDEX = ''
+        self.NAME = ''
+        self.SIZE = ''
+        self.FILES = ''
+        self.AGE = ''
+        self.SEED = ''
+        self.LEECH = ''
+        self.HEADER = ''
+        self.ENDC = ''
+
+def paint_items():
+    torrents, index = kat_get_items()
+    rows, columns = os.popen('stty size', 'r').read().split()
+    left = "#   Name"
+    right = "Size       Files  Seed  Leech"
+    print colors.HEADER + left + (int(columns) - len(left) - len(right)) * " " + right + colors.ENDC
+    print int(columns) * "-"
+    i = 1
+    while (i < index):
+        left = string.ljust(str(i) + ".", 4) + torrents[i]["name"]
+        right = string.ljust(torrents[i]["size"], 11) + \
+                string.ljust(torrents[i]["files"], 7) + \
+                string.ljust(torrents[i]["seed"], 6) + \
+                string.ljust(torrents[i]["leech"], 5)
+        print colors.INDEX + string.ljust(str(i) + ".", 4) + \
+              colors.NAME + torrents[i]["name"] + \
+              (int(columns) - len(left) - len(right)) * " " + \
+              colors.SIZE + string.ljust(torrents[i]["size"], 11) + \
+              colors.FILES + string.ljust(torrents[i]["files"], 7) + \
+              colors.SEED + string.ljust(torrents[i]["seed"], 6) + \
+              colors.LEECH + string.ljust(torrents[i]["leech"], 5) + \
+              colors.ENDC
+        i += 1
+    return torrents
+
+def download_file(url, file):
+    request = urllib2.Request(url)
+    request.add_header('Accept-encoding', 'gzip')
+    response = urllib2.urlopen(request)
+    if response.info().get('Content-Encoding') == 'gzip':
+        buf = StringIO( response.read())
+        f = gzip.GzipFile(fileobj=buf)
+        file = open(file, "wb")
+        file.write(f.read())
+        file.close
+    else:
+        urllib.retrieve(url, file)
+
+if __name__ == "__main__":
+    conf = load_config()
+    torrents = paint_items()
+    try:
+        url = torrents[int(raw_input("\nEnter torrent number: "))]["url"]
+    except KeyboardInterrupt:
+        print ""
+        sys.exit()
+    download_file(url, conf["download_dir"] + "/" + url.split('/')[-1])
