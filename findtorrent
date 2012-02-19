@@ -10,13 +10,15 @@ import string
 from configobj import ConfigObj
 from StringIO import StringIO
 
+
 def usage():
     print "Usage: findtorrent [keywords]"
 
+
 def load_config():
-    config_file = os.environ["XDG_CONFIG_HOME"] + "/findtorrent/findtorrent.conf" 
+    config_file = os.environ["XDG_CONFIG_HOME"] + "/findtorrent/findtorrent.conf"
     try:
-        conf = ConfigObj(config_file, file_error = True)
+        conf = ConfigObj(config_file, file_error=True)
     except IOError:
         if not os.path.exists(config_file.replace("/findtorrent.conf", "")):
             os.makedirs(config_file.replace("/findtorrent.conf", ""))
@@ -25,7 +27,8 @@ def load_config():
         conf["download_dir"] = os.environ["HOME"]
         conf.write()
     return conf
-     
+
+
 def kat_get_items():
     query = urllib.quote(sys.argv[1])
     page = urllib.urlopen("http://kat.ph/usearch/%s" % query)
@@ -59,6 +62,7 @@ def kat_get_items():
             torrents[index] = item
     return torrents, index
 
+
 class colors:
     INDEX = '\033[90m'
     NAME = '\033[94m'
@@ -69,6 +73,7 @@ class colors:
     LEECH = '\033[95m'
     HEADER = '\033[90m'
     ENDC = '\033[0m'
+
     def disable(self):
         self.INDEX = ''
         self.NAME = ''
@@ -79,6 +84,7 @@ class colors:
         self.LEECH = ''
         self.HEADER = ''
         self.ENDC = ''
+
 
 def paint_items():
     torrents, index = kat_get_items()
@@ -105,12 +111,13 @@ def paint_items():
         i += 1
     return torrents
 
+
 def download_file(url, file):
     request = urllib2.Request(url)
     request.add_header('Accept-encoding', 'gzip')
     response = urllib2.urlopen(request)
     if response.info().get('Content-Encoding') == 'gzip':
-        buf = StringIO( response.read())
+        buf = StringIO(response.read())
         f = gzip.GzipFile(fileobj=buf)
         file = open(file, "wb")
         file.write(f.read())
