@@ -3,6 +3,7 @@
 import re
 import os
 import sys
+import getopt
 import urllib
 import urllib2
 import gzip
@@ -151,10 +152,22 @@ def download_file(url, file):
 
 if __name__ == "__main__":
     conf = load_config()
+
     if (len(sys.argv) > 1):
+        try:
+            opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
+        except getopt.GetoptError, err:
+            print str(err)
+            usage()
+            sys.exit()
+        for o, a in opts:
+            if o in ("-h", "--help"):
+                usage()
+                sys.exit()
         torrents = paint_items(sys.argv[1])
     else:
         torrents = paint_items(raw_input("Enter search terms: "))
+
     try:
         for url_index in string.split(raw_input("\nEnter torrent number: "), ","):
             url = torrents[int(url_index)]["url"]
