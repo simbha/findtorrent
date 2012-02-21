@@ -30,8 +30,8 @@ def load_config():
     return conf
 
 
-def kat_get_items():
-    query = urllib.quote(sys.argv[1])
+def kat_get_items(query):
+    query = urllib.quote(query)
     page = urllib.urlopen("http://kat.ph/usearch/%s" % query)
     lines = page.readlines()
     page.close()
@@ -106,8 +106,8 @@ class colors:
         self.ENDC = ''
 
 
-def paint_items():
-    torrents, index = kat_get_items()
+def paint_items(query):
+    torrents, index = kat_get_items(query)
     rows, columns = os.popen('stty size', 'r').read().split()
     left = "#   Name"
     right = "Size       Files  Seed  Leech"
@@ -151,7 +151,10 @@ def download_file(url, file):
 
 if __name__ == "__main__":
     conf = load_config()
-    torrents = paint_items()
+    if (len(sys.argv) > 1):
+        torrents = paint_items(sys.argv[1])
+    else:
+        torrents = paint_items(raw_input("Enter search terms: "))
     try:
         for url_index in string.split(raw_input("\nEnter torrent number: "), ","):
             url = torrents[int(url_index)]["url"]
