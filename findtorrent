@@ -153,8 +153,9 @@ if __name__ == "__main__":
     conf = load_config()
     torrents = paint_items()
     try:
-        url = torrents[int(raw_input("\nEnter torrent number: "))]["url"]
+        for url_index in string.split(raw_input("\nEnter torrent number: "), ","):
+            url = torrents[int(url_index)]["url"]
+            download_file(url, conf["download_dir"] + "/" + url.split('/')[-1])
     except KeyboardInterrupt:
         print ""
         sys.exit()
-    download_file(url, conf["download_dir"] + "/" + url.split('/')[-1])
