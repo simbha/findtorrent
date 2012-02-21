@@ -166,7 +166,11 @@ if __name__ == "__main__":
                 sys.exit()
         torrents = paint_items(sys.argv[1])
     else:
-        torrents = paint_items(raw_input("Enter search terms: "))
+        try:
+            torrents = paint_items(raw_input("Enter search terms: "))
+        except KeyboardInterrupt:
+            print ""
+            sys.exit()
 
     try:
         for url_index in string.split(raw_input("\nEnter torrent number: "), ","):
