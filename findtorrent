@@ -13,6 +13,7 @@ from StringIO import StringIO
 sys.path.append("plugins")
 import kat
 import tpb
+import isohunt
 
 
 def usage():
@@ -58,7 +59,7 @@ class colors:
 
 
 def paint_items(query):
-    torrents, index = kat.search(query)
+    torrents, index = isohunt.search(query)
     rows, columns = os.popen('stty size', 'r').read().split()
     left = "#   Name"
     right = "Size       Files  Seed  Leech"
@@ -98,7 +99,7 @@ def download_file(url, file):
         file.write(f.read())
         file.close
     else:
-        urllib.retrieve(url, file)
+        urllib.urlretrieve(url, file)
 
 
 if __name__ == "__main__":
