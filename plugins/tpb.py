@@ -20,27 +20,27 @@ def search(query):
                 line = lines[linenum].strip()
                 if 'class="detLink" title="' in line:
                     item["name"] = \
-                            line.split('">')[2]\
-                                .split("</a></div>")[0]
+                        line.split('">')[2]\
+                        .split("</a></div>")[0]
                 elif '<a href="http://' in line:
                     item["url"] = \
                         line.split('<a href="')[2]\
-                            .split('" title="')[0]
+                        .split('" title="')[0]
                 elif 'class="detDesc"' in line:
                     item["size"] = \
                         line.split(" ")[4]\
-                            .replace("&nbsp;", " ")\
-                                .replace("i", "")\
-                                    .replace(",", "")
+                        .replace("&nbsp;", " ")\
+                        .replace("i", "")\
+                        .replace(",", "")
                 elif '</td>' in line:
                     item["seed"] = \
                         lines[linenum + 1].strip()\
-                            .split(">")[1]\
-                                .split("<")[0]
+                        .split(">")[1]\
+                        .split("<")[0]
                     item["leech"] = \
                         lines[linenum + 2].strip()\
-                            .split(">")[1]\
-                                .split("<")[0]
+                        .split(">")[1]\
+                        .split("<")[0]
                 item["files"] = "N/A"
                 linenum += 1
             torrents[index] = item
