@@ -22,8 +22,8 @@ def usage():
 
 
 def load_config():
-    config_file = os.environ["XDG_CONFIG_HOME"] + \
-                  "/findtorrent/findtorrent.conf"
+    config_file = os.environ["XDG_CONFIG_HOME"]\
+        + "/findtorrent/findtorrent.conf"
     try:
         conf = ConfigObj(config_file, file_error=True)
     except IOError:
@@ -64,27 +64,27 @@ def paint_items(query):
     rows, columns = os.popen('stty size', 'r').read().split()
     left = "#   Name"
     right = "Size       Files  Seed  Leech"
-    print colors.HEADER + \
-          left + \
-          (int(columns) - len(left) - len(right)) * " " + \
-          right + \
-          colors.ENDC
+    print colors.HEADER\
+        + left\
+        + (int(columns) - len(left) - len(right)) * " "\
+        + right\
+        +  colors.ENDC
     print int(columns) * "-"
     i = 1
     while (i < index):
         left = string.ljust(str(i) + ".", 4) + torrents[i]["name"]
-        right = string.ljust(torrents[i]["size"], 11) + \
-                string.ljust(torrents[i]["files"], 7) + \
-                string.ljust(torrents[i]["seed"], 6) + \
-                string.ljust(torrents[i]["leech"], 5)
-        print colors.INDEX + string.ljust(str(i) + ".", 4) + \
-              colors.NAME + torrents[i]["name"] + \
-              (int(columns) - len(left) - len(right)) * " " + \
-              colors.SIZE + string.ljust(torrents[i]["size"], 11) + \
-              colors.FILES + string.ljust(torrents[i]["files"], 7) + \
-              colors.SEED + string.ljust(torrents[i]["seed"], 6) + \
-              colors.LEECH + string.ljust(torrents[i]["leech"], 5) + \
-              colors.ENDC
+        right = string.ljust(torrents[i]["size"], 11)\
+            + string.ljust(torrents[i]["files"], 7)\
+            + string.ljust(torrents[i]["seed"], 6)\
+            + string.ljust(torrents[i]["leech"], 5)
+        print colors.INDEX + string.ljust(str(i) + ".", 4)\
+            + colors.NAME + torrents[i]["name"]\
+            + (int(columns) - len(left) - len(right)) * " "\
+            + colors.SIZE + string.ljust(torrents[i]["size"], 11)\
+            + colors.FILES + string.ljust(torrents[i]["files"], 7)\
+            + colors.SEED + string.ljust(torrents[i]["seed"], 6)\
+            + colors.LEECH + string.ljust(torrents[i]["leech"], 5)\
+            + colors.ENDC
         i += 1
     return torrents
 
