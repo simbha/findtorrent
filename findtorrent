@@ -10,7 +10,8 @@ import string
 from configobj import ConfigObj
 from StringIO import StringIO
 
-sys.path.append("plugins")
+plugin_dir = sys.path[0] + "/plugins"
+sys.path.append(plugin_dir)
 import kat
 import tpb
 import isohunt
