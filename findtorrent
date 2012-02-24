@@ -2,7 +2,7 @@
 
 import os
 import sys
-import getopt
+import argparse
 import urllib
 import urllib2
 import gzip
@@ -34,6 +34,21 @@ def load_config():
         conf["download_dir"] = os.environ["HOME"]
         conf.write()
     return conf
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description='Find and download torrent files from various torrent sites')
+    parser.add_argument('--sites',
+                        metavar='sites',
+                        default='isohunt',
+                        help='sites')
+    parser.add_argument('keywords',
+                        metavar='keywords',
+                        nargs='?',
+                        default='',
+                        type=str,
+                        help='search')
+    return vars(parser.parse_args())
 
 
 class colors:
@@ -105,25 +120,16 @@ def download_file(url, file):
 
 if __name__ == "__main__":
     conf = load_config()
+    args = get_args()
 
-    if (len(sys.argv) > 1):
-        try:
-            opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
-        except getopt.GetoptError, err:
-            print str(err)
-            usage()
-            sys.exit()
-        for o, a in opts:
-            if o in ("-h", "--help"):
-                usage()
-                sys.exit()
-        torrents = paint_items(sys.argv[1])
-    else:
+    if (args['keywords'] == ''):
         try:
             torrents = paint_items(raw_input("Enter search terms: "))
         except KeyboardInterrupt:
             print ""
             sys.exit()
+    else:
+        torrents = paint_items(sys.argv[1])
 
     try:
         for url_index in string.split(raw_input("\nEnter torrent number: "), ","):
