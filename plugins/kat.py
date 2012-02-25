@@ -39,11 +39,6 @@ def search(keywords):
                     item["files"] = \
                         line.split('<td class="center">')[-1]\
                         .split("</td>")[-2]
-                elif "&nbsp;" in line:
-                    item["age"] = \
-                        line.split('<td class="center">')[-1]\
-                        .split("</td>")[-2]\
-                        .replace("&nbsp;", " ")
                 elif "green center" in line:
                     item["seed"] = \
                         line.split('<td class="green center">')[-1]\
