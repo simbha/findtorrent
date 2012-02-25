@@ -83,7 +83,7 @@ def paint_items(query):
         + left\
         + (int(columns) - len(left) - len(right)) * " "\
         + right\
-        +  colors.ENDC
+        + colors.ENDC
     print int(columns) * "-"
     i = 1
     while (i < index):
