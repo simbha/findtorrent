@@ -12,13 +12,6 @@ from StringIO import StringIO
 
 plugin_dir = sys.path[0] + "/plugins"
 sys.path.append(plugin_dir)
-import kat
-import tpb
-import isohunt
-
-
-def usage():
-    print "Usage: findtorrent [keywords]"
 
 
 def load_config():
@@ -32,23 +25,40 @@ def load_config():
         conf = ConfigObj()
         conf.filename = config_file
         conf["download_dir"] = os.environ["HOME"]
+        conf["default_plugin"] = "isohunt"
         conf.write()
+
     return conf
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='Find and download torrent files from various torrent sites')
-    parser.add_argument('--sites',
-                        metavar='sites',
-                        default='isohunt',
-                        help='sites')
+    parser = argparse.ArgumentParser(description='Find and download torrent \
+                                                  files from various torrent \
+                                                  sites')
+    parser.add_argument('--plugin',
+                        metavar='plugin',
+                        default=conf['default_plugin'],
+                        help='plugin')
     parser.add_argument('keywords',
                         metavar='keywords',
                         nargs='?',
                         default='',
                         type=str,
                         help='search')
-    return vars(parser.parse_args())
+    args = vars(parser.parse_args())
+
+    plugin = args['plugin']
+
+    if (args['keywords'] == ''):
+        try:
+            keywords = raw_input('Enter search terms: ')
+        except KeyboardInterrupt:
+            print ""
+            sys.exit()
+    else:
+        keywords = args['keywords']
+
+    return plugin, keywords
 
 
 class colors:
@@ -74,8 +84,7 @@ class colors:
         self.ENDC = ''
 
 
-def paint_items(query):
-    torrents, index = isohunt.search(query)
+def print_items(items, index):
     rows, columns = os.popen('stty size', 'r').read().split()
     left = "#   Name"
     right = "Size       Files  Seed  Leech"
@@ -87,21 +96,20 @@ def paint_items(query):
     print int(columns) * "-"
     i = 1
     while (i < index):
-        left = string.ljust(str(i) + ".", 4) + torrents[i]["name"]
-        right = string.ljust(torrents[i]["size"], 11)\
-            + string.ljust(torrents[i]["files"], 7)\
-            + string.ljust(torrents[i]["seed"], 6)\
-            + string.ljust(torrents[i]["leech"], 5)
+        left = string.ljust(str(i) + ".", 4) + items[i]["name"]
+        right = string.ljust(items[i]["size"], 11)\
+            + string.ljust(items[i]["files"], 7)\
+            + string.ljust(items[i]["seed"], 6)\
+            + string.ljust(items[i]["leech"], 5)
         print colors.INDEX + string.ljust(str(i) + ".", 4)\
-            + colors.NAME + torrents[i]["name"]\
+            + colors.NAME + items[i]["name"]\
             + (int(columns) - len(left) - len(right)) * " "\
-            + colors.SIZE + string.ljust(torrents[i]["size"], 11)\
-            + colors.FILES + string.ljust(torrents[i]["files"], 7)\
-            + colors.SEED + string.ljust(torrents[i]["seed"], 6)\
-            + colors.LEECH + string.ljust(torrents[i]["leech"], 5)\
+            + colors.SIZE + string.ljust(items[i]["size"], 11)\
+            + colors.FILES + string.ljust(items[i]["files"], 7)\
+            + colors.SEED + string.ljust(items[i]["seed"], 6)\
+            + colors.LEECH + string.ljust(items[i]["leech"], 5)\
             + colors.ENDC
         i += 1
-    return torrents
 
 
 def download_file(url, file):
@@ -120,20 +128,16 @@ def download_file(url, file):
 
 if __name__ == "__main__":
     conf = load_config()
-    args = get_args()
+    plugin, keywords = get_args()
 
-    if (args['keywords'] == ''):
-        try:
-            torrents = paint_items(raw_input("Enter search terms: "))
-        except KeyboardInterrupt:
-            print ""
-            sys.exit()
-    else:
-        torrents = paint_items(sys.argv[1])
+    exec 'import %s' % plugin
+
+    exec 'items, index = %s.search(keywords)' % plugin
+    print_items(items, index)
 
     try:
         for url_index in string.split(raw_input("\nEnter torrent number: "), ","):
-            url = torrents[int(url_index)]["url"]
+            url = items[int(url_index)]["url"]
             download_file(url, conf["download_dir"] + "/" + url.split('/')[-1])
     except KeyboardInterrupt:
         print ""

@@ -3,9 +3,9 @@
 import urllib
 
 
-def search(query):
-    query = urllib.quote(query)
-    page = urllib.urlopen("http://thepiratebay.se/search/%s/0/99/0" % query)
+def search(keywords):
+    keywords = urllib.quote(keywords)
+    page = urllib.urlopen("http://thepiratebay.se/search/%s/0/99/0" % keywords)
     lines = page.readlines()
     page.close()
     index = 0

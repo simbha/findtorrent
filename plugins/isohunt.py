@@ -3,9 +3,9 @@
 import urllib
 
 
-def search(query):
-    query = urllib.quote_plus(query)
-    page = urllib.urlopen("http://isohunt.com/torrents/?ihq=%s" % query)
+def search(keywords):
+    keywords = urllib.quote_plus(keywords)
+    page = urllib.urlopen("http://isohunt.com/torrents/?ihq=%s" % keywords)
     lines = page.readlines()
     page.close()
     index = 0

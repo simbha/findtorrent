@@ -4,9 +4,9 @@ import urllib
 import re
 
 
-def search(query):
-    query = urllib.quote(query)
-    page = urllib.urlopen("http://kat.ph/usearch/%s" % query)
+def search(keywords):
+    keywords = urllib.quote(keywords)
+    page = urllib.urlopen("http://kat.ph/usearch/%s" % keywords)
     lines = page.readlines()
     page.close()
     index = 0
