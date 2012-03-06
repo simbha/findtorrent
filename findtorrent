@@ -39,6 +39,10 @@ def get_args():
                         metavar='plugin',
                         default=conf['default_plugin'],
                         help='plugin')
+    parser.add_argument('--max-items',
+                        metavar='max_items',
+                        default=-1,
+                        help='maximum number of results')
     parser.add_argument('keywords',
                         metavar='keywords',
                         nargs='?',
@@ -48,6 +52,7 @@ def get_args():
     args = vars(parser.parse_args())
 
     plugin = args['plugin']
+    max_items = int(args['max_items'])
 
     if (args['keywords'] == ''):
         try:
@@ -58,7 +63,7 @@ def get_args():
     else:
         keywords = args['keywords']
 
-    return plugin, keywords
+    return plugin, max_items, keywords
 
 
 class colors:
@@ -82,7 +87,7 @@ class colors:
         self.ENDC = ''
 
 
-def print_items(items, index):
+def print_items(items, index, max_items):
     rows, columns = os.popen('stty size', 'r').read().split()
     left = "#   Name"
     right = "Size       Files  Seed  Leech"
@@ -94,6 +99,8 @@ def print_items(items, index):
     print int(columns) * "-"
     i = 1
     while (i < index):
+        if (max_items != -1 and i > max_items):
+            break
         left = string.ljust(str(i) + ".", 4) + items[i]["name"]
         right = string.ljust(items[i]["size"], 11)\
             + string.ljust(items[i]["files"], 7)\
@@ -126,12 +133,12 @@ def download_file(url, file):
 
 if __name__ == "__main__":
     conf = load_config()
-    plugin, keywords = get_args()
+    plugin, max_items, keywords = get_args()
 
     exec 'import %s' % plugin
 
     exec 'items, index = %s.search(keywords)' % plugin
-    print_items(items, index)
+    print_items(items, index, max_items)
 
     try:
         for url_index in string.split(raw_input("\nEnter torrent number: "), ","):
