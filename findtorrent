@@ -9,9 +9,15 @@ import gzip
 import string
 from configobj import ConfigObj
 from StringIO import StringIO
+from operator import itemgetter
+from hurry.filesize import size, si
 
 plugin_dir = sys.path[0] + "/plugins"
 sys.path.append(plugin_dir)
+
+
+def str2bool(v):
+    return v.lower() in ("yes", "true")
 
 
 def load_config():
@@ -43,6 +49,14 @@ def get_args():
                         metavar='max_items',
                         default=-1,
                         help='maximum number of results')
+    parser.add_argument('--sort',
+                        metavar='sort',
+                        default='seed',
+                        help='sort results')
+    parser.add_argument('--reverse',
+                        metavar='reverse',
+                        default='True',
+                        help='reverse results order')
     parser.add_argument('keywords',
                         metavar='keywords',
                         nargs='?',
@@ -53,17 +67,24 @@ def get_args():
 
     plugin = args['plugin']
     max_items = int(args['max_items'])
+    sort = args['sort']
+    reverse = str2bool(args['reverse'])
 
     if (args['keywords'] == ''):
-        try:
-            keywords = raw_input('Enter search terms: ')
-        except KeyboardInterrupt:
-            print ""
-            sys.exit()
+        keywords = get_user_input('Enter search terms:')
     else:
         keywords = args['keywords']
 
-    return plugin, max_items, keywords
+    return plugin, max_items, sort, reverse, keywords
+
+
+def get_user_input(message):
+    try:
+        user_input = raw_input(message + ' ')
+    except KeyboardInterrupt:
+        print ''
+        sys.exit()
+    return user_input
 
 
 class colors:
@@ -87,34 +108,38 @@ class colors:
         self.ENDC = ''
 
 
-def print_items(items, index, max_items):
-    rows, columns = os.popen('stty size', 'r').read().split()
-    left = "#   Name"
-    right = "Size       Files  Seed  Leech"
-    print colors.HEADER\
-        + left\
-        + (int(columns) - len(left) - len(right)) * " "\
-        + right\
-        + colors.ENDC
-    print int(columns) * "-"
-    i = 1
-    while (i < index):
-        if (max_items != -1 and i > max_items):
-            break
-        left = string.ljust(str(i) + ".", 4) + items[i]["name"]
-        right = string.ljust(items[i]["size"], 11)\
-            + string.ljust(items[i]["files"], 7)\
-            + string.ljust(items[i]["seed"], 6)\
-            + string.ljust(items[i]["leech"], 5)
-        print colors.INDEX + string.ljust(str(i) + ".", 4)\
-            + colors.NAME + items[i]["name"]\
-            + (int(columns) - len(left) - len(right)) * " "\
-            + colors.SIZE + string.ljust(items[i]["size"], 11)\
-            + colors.FILES + string.ljust(items[i]["files"], 7)\
-            + colors.SEED + string.ljust(items[i]["seed"], 6)\
-            + colors.LEECH + string.ljust(items[i]["leech"], 5)\
-            + colors.ENDC
-        i += 1
+class Items:
+    def print_items(self, list, sort, reverse, max_items):
+        cols = int(os.popen('stty size', 'r').read().split()[1])
+        Items.sorted = sorted(list, key=itemgetter(sort), reverse=reverse)
+        print colors.HEADER + \
+              'No.  Name' + (cols - 33) * ' ' + 'Size  Files  Seed  Leech'
+        print cols * '-'
+        for index, item in enumerate(Items.sorted):
+            if (max_items != -1 and index + 1 > max_items):
+                break
+            print colors.INDEX + string.ljust(str(index + 1) + '.', 5) + \
+                  colors.NAME + string.ljust(item['name'][:cols - 31],
+                                             cols - 31) + \
+                  colors.SIZE + string.rjust(size(item['size'],
+                                                  system=si), 6) + \
+                  colors.FILES + string.rjust(str(item['files']) \
+                                 .replace('-1', 'N/A'), 7) + \
+                  colors.SEED + string.rjust(str(item['seed']) \
+                                .replace('-1', 'N/A'), 6) + \
+                  colors.LEECH + string.rjust(str(item['leech']) \
+                                 .replace('-1', 'N/A'), 7) + \
+                  colors.ENDC
+
+    def get_url_list(self):
+        Items.urls = []
+        url_nums = get_user_input('Enter torrent number:').split(',')
+        for url_num in url_nums:
+            Items.urls.append(Items.sorted[int(url_num) - 1]['url'])
+
+    def download_urls(self):
+        for url in Items.urls:
+            download_file(url, conf["download_dir"] + "/" + url.split('/')[-1])
 
 
 def download_file(url, file):
@@ -133,17 +158,12 @@ def download_file(url, file):
 
 if __name__ == "__main__":
     conf = load_config()
-    plugin, max_items, keywords = get_args()
+    plugin, max_items, sort, reverse, keywords = get_args()
 
     exec 'import %s' % plugin
 
-    exec 'items, index = %s.search(keywords)' % plugin
-    print_items(items, index, max_items)
-
-    try:
-        for url_index in string.split(raw_input("\nEnter torrent number: "), ","):
-            url = items[int(url_index)]["url"]
-            download_file(url, conf["download_dir"] + "/" + url.split('/')[-1])
-    except KeyboardInterrupt:
-        print ""
-        sys.exit()
+    exec 'item_list = %s.search(keywords)' % plugin
+    i = Items()
+    i.print_items(item_list, sort, reverse, max_items)
+    i.get_url_list()
+    i.download_urls()

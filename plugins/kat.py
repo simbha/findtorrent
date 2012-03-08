@@ -9,13 +9,10 @@ def search(keywords):
     page = urllib.urlopen("http://kat.ph/usearch/%s" % keywords)
     lines = page.readlines()
     page.close()
-    index = 0
-    torrents = {}
+    torrents = []
     for linenum, line in enumerate(lines):
         if 'id="torrent_' in line:
-            index += 1
             item = {}
-            item["index"] = index
             end = linenum + 12
             while (linenum < end):
                 line = lines[linenum].strip()
@@ -31,22 +28,30 @@ def search(keywords):
                         .replace(".torrent?title=", "/")\
                         + ".torrent"
                 elif "nobr center" in line:
-                    item["size"] = \
+                    filesize = \
                         line.split('"nobr center">')[-1]\
                         .split("</span>")[-2]\
                         .replace("<span>", "")
+                    if 'GB' in filesize.split():
+                         item['size'] = float(filesize.split()[0]) * 1024 * 1024 * 1024
+                    elif 'MB' in filesize.split():
+                        item['size'] = float(filesize.split()[0]) * 1024 * 1024
+                    elif 'KB' in filesize.split():
+                        item['size'] = float(filesize.split()[0]) * 1024
+                    else:
+                        item['size'] = int(filesize.split()[0])
                 elif re.compile('<td class="center">[0-9]*</td>').search(line):
                     item["files"] = \
                         line.split('<td class="center">')[-1]\
                         .split("</td>")[-2]
                 elif "green center" in line:
                     item["seed"] = \
-                        line.split('<td class="green center">')[-1]\
-                        .split("</td>")[-2]
+                        int(line.split('<td class="green center">')[-1]\
+                        .split("</td>")[-2])
                 elif "red lasttd center" in line:
                     item["leech"] = \
-                        line.split('<td class="red lasttd center">')[-1]\
-                        .split("</td>")[-2]
+                        int(line.split('<td class="red lasttd center">')[-1]\
+                        .split("</td>")[-2])
                 linenum += 1
-            torrents[index] = item
-    return torrents, index
+            torrents.append(item)
+    return torrents
