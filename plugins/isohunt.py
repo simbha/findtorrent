@@ -41,11 +41,19 @@ def search(keywords):
                 else:
                     item['size'] = int(filesize.split()[0])
                 item["seed"] = \
-                    int(i.split('<td class="row3">')[1]\
-                    .split("</td>")[0])
+                    i.split('<td class="row3">')[1]\
+                    .split("</td>")[0]
+                if (item['seed'] == ''):
+                    item['seed'] = -1
+                else:
+                    item['seed'] = int(item['seed'])
                 item["leech"] = \
-                    int(i.split('<td class="row3">')[2]\
-                    .split("</td>")[0])
+                    i.split('<td class="row3">')[2]\
+                    .split("</td>")[0]
+                if (item['leech'] == ''):
+                    item['leech'] = -1
+                else:
+                    item['seed'] = int(item['seed'])
                 item["files"] = \
                     int(i.split('<td class="row3" title=\'')[1]\
                     .split()[0])
