@@ -4,15 +4,14 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # http://sam.zoy.org/wtfpl/COPYING for more details.
 
-import urllib
-
-
 def search(keywords):
+    import urllib
+
     keywords = urllib.quote_plus(keywords)
     page = urllib.urlopen("http://isohunt.com/torrents/?ihq=%s" % keywords)
     lines = page.readlines()
     page.close()
-    torrents = []
+    results = []
     for linenum, line in enumerate(lines):
         if '<table id=serps' in line:
             for i in line.split("<a id=link")[1:]:
@@ -57,5 +56,5 @@ def search(keywords):
                 item["files"] = \
                     int(i.split('<td class="row3" title=\'')[1]\
                     .split()[0])
-                torrents.append(item)
-    return torrents
+                results.append(item)
+    return results

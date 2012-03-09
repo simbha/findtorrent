@@ -4,15 +4,14 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # http://sam.zoy.org/wtfpl/COPYING for more details.
 
-import urllib
-
-
 def search(keywords):
+    import urllib
+
     keywords = urllib.quote(keywords)
     page = urllib.urlopen('http://extratorrent.com/search/?search=%s' % keywords)
     lines = page.readlines()
     page.close()
-    torrents = []
+    results = []
     for linenum, line in enumerate(lines):
         if '<br /><table class="tl">' in line:
             for i in line.split('<td><a href="/torrent_download/')[1:]:
@@ -44,5 +43,5 @@ def search(keywords):
                     .split('</td>')[0] \
                     .replace('---', '-1'))
                 item['files'] = -1
-                torrents.append(item)
-    return torrents
+                results.append(item)
+    return results

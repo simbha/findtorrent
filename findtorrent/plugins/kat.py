@@ -4,16 +4,15 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # http://sam.zoy.org/wtfpl/COPYING for more details.
 
-import urllib
-import re
-
-
 def search(keywords):
+    import urllib
+    import re
+
     keywords = urllib.quote(keywords)
     page = urllib.urlopen("http://kat.ph/usearch/%s" % keywords)
     lines = page.readlines()
     page.close()
-    torrents = []
+    results = []
     for linenum, line in enumerate(lines):
         if 'id="torrent_' in line:
             item = {}
@@ -57,5 +56,5 @@ def search(keywords):
                         int(line.split('<td class="red lasttd center">')[-1]\
                         .split("</td>")[-2])
                 linenum += 1
-            torrents.append(item)
-    return torrents
+            results.append(item)
+    return results
